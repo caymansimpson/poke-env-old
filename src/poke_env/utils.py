@@ -85,3 +85,22 @@ def compute_raw_stats(
         )
 
     return raw_stats
+
+# This is how we translate active pokemon to showdown targets returned from the Battle object
+def active_pokemon_to_showdown_target(i, opp=False):
+    """
+    :return: Given an index of the mon in active_pokemon or opponent_active_pokemon, returns the showdown int that we need to give for a showdown action
+    :rtype: int
+    """
+    if opp: return {0: 1, 1: 2}[i]
+    else: return {0: -1, 1: -2}[i]
+
+# This is how we translate showdown targets pokemon to active pokemon returned from the Battle object
+def showdown_target_to_mon(battle, i) -> Optional[Pokemon]:
+    """
+    :return: Given a showdown target, returns the mon in the battle
+    :rtype: int
+    """
+    mapping = {1: 0, 2: 1, -1: 0, -2: 1}
+    if i < 0: return battle.active_pokemon[mapping[i]]
+    return battle.opponent_active_pokemon[mapping[i]]
