@@ -397,6 +397,73 @@ class Player(PlayerNetwork, ABC):
         """
         return DefaultBattleOrder()
 
+   # Returns a list of all possible DoubleBattleOrders
+    def get_all_doubles_moves(self, battle: DoubleBattle) -> List[DoubleBattleOrder]:
+        active_orders = [[], []]
+
+        for (
+            idx,
+            (orders, mon, switches, moves, can_mega, can_z_move, can_dynamax),
+        ) in enumerate(
+            zip(
+                active_orders,
+                battle.active_pokemon,
+                battle.available_switches,
+                battle.available_moves,
+                battle.can_mega_evolve,
+                battle.can_z_move,
+                battle.can_dynamax,
+            )
+        ):
+            if mon:
+                targets = {
+                    move: battle.get_possible_showdown_targets(move, mon)
+                    for move in moves
+                }
+                orders.extend(
+                    [
+                        BattleOrder(move, actor=mon, move_target=target)
+                        for move in moves
+                        for target in targets[move]
+                    ]
+                )
+                orders.extend([BattleOrder(switch, actor=mon) for switch in switches])
+
+                if can_mega:
+                    orders.extend(
+                        [
+                            BattleOrder(move, actor=mon, move_target=target, mega=True)
+                            for move in moves
+                            for target in targets[move]
+                        ]
+                    )
+                if can_z_move:
+                    available_z_moves = set(mon.available_z_moves)
+                    orders.extend(
+                        [
+                            BattleOrder(move, actor=mon, move_target=target, z_move=True)
+                            for move in moves
+                            for target in targets[move]
+                            if move in available_z_moves
+                        ]
+                    )
+
+                if can_dynamax:
+                    orders.extend(
+                        [
+                            BattleOrder(move, actor=mon, move_target=target, dynamax=True)
+                            for move in moves
+                            for target in targets[move]
+                        ]
+                    )
+
+                if sum(battle.force_switch) == 1:
+                    if orders:
+                        return list(map(lambda x: DoubleBattleOrder(first_order=x, second_order=None), orders))
+                    return None
+
+        return DoubleBattleOrder.join_orders(*active_orders)
+
     def choose_random_doubles_move(self, battle: DoubleBattle) -> BattleOrder:
         active_orders = [[], []]
 
@@ -640,6 +707,7 @@ class Player(PlayerNetwork, ABC):
     @staticmethod
     def create_order(
         order: Union[Move, Pokemon],
+        actor: Optional[Pokemon] = None,
         mega: bool = False,
         z_move: bool = False,
         dynamax: bool = False,
@@ -649,6 +717,7 @@ class Player(PlayerNetwork, ABC):
 
         :param order: Move to make or Pokemon to switch to.
         :type order: Move or Pokemon
+        :param actor: The mon making the move
         :param mega: Whether to mega evolve the pokemon, if a move is chosen.
         :type mega: bool
         :param z_move: Whether to make a zmove, if a move is chosen.
@@ -661,7 +730,7 @@ class Player(PlayerNetwork, ABC):
         :rtype: str
         """
         return BattleOrder(
-            order, mega=mega, move_target=move_target, z_move=z_move, dynamax=dynamax
+            order, actor=actor, mega=mega, move_target=move_target, z_move=z_move, dynamax=dynamax
         )
 
     @property
