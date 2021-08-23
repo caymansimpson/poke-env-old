@@ -414,7 +414,7 @@ class DoubleBattle(AbstractBattle):
         """
         return {mon.species: mon for mon in self._sent_team}
 
-     @property
+    @property
     def teampreview_opponent_team(self) -> Dict[str, Pokemon]:
         """
         During teampreview, keys are not definitive: please rely on values; self.team

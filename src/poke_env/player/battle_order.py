@@ -4,6 +4,7 @@ from typing import Optional, Union, List
 from poke_env.environment.double_battle import DoubleBattle
 from poke_env.environment.move import Move
 from poke_env.environment.pokemon import Pokemon
+from poke_env import utils
 
 
 @dataclass
@@ -74,20 +75,20 @@ class BattleOrder:
             if order.order.deduced_target == 'allAdjacent':
                 for i, potential_mon in enumerate(battle.active_pokemon):
                     if potential_mon is not None and order.actor != potential_mon:
-                        potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=False))
+                        potentials.append(utils.active_pokemon_to_showdown_target(i, opp=False))
 
                 for i, potential_mon in enumerate(battle.opponent_active_pokemon):
-                    if potential_mon is not None: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=True))
+                    if potential_mon is not None: potentials.append(utils.active_pokemon_to_showdown_target(i, opp=True))
 
             # For moves like Heatwave that affect all opponents, ensure that we list all potential affected opponents
             elif order.order.deduced_target in ['foeSide', 'allAdjacentFoes']:
                 for i, potential_mon in enumerate(battle.opponent_active_pokemon):
-                    if potential_mon: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=True))
+                    if potential_mon: potentials.append(utils.active_pokemon_to_showdown_target(i, opp=True))
 
             # For moves that affect our side of the field
             elif order.order.deduced_target in ['allies', 'allySide', 'allyTeam']:
                 for i, potential_mon in enumerate(battle.active_pokemon):
-                    if potential_mon and mon != potential_mon: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=True))
+                    if potential_mon and mon != potential_mon: potentials.append(utils.active_pokemon_to_showdown_target(i, opp=True))
 
             # For moves that don't have targets (like self-moves)
             else:
@@ -96,7 +97,7 @@ class BattleOrder:
         else:
             # If this is a one-target move, and there is one pokemon left, technically both opponent targets work in Showdown, since there's only one valid
             # target. For our purposes, we only want to return the right target (where the mon is) so that we can retrieve the mon later without hassle
-            if battle.showdown_target_to_mon(order.move_target):
+            if utils.showdown_target_to_mon(battle, order.move_target):
                 potentials.append(order.move_target)
             elif order.move_target < 0:
                 raise("get_affected_targets has been given an invalid order where we're targeting an ally... but there's no ally...?")
@@ -228,7 +229,7 @@ class DoubleBattleOrder(BattleOrder):
                 return False
 
             if order and order.is_move() and order.move_target != 0:
-                if not battle.showdown_target_to_mon(order.move_target):
+                if not utils.showdown_target_to_mon(battle, order.move_target):
                     if v: print(f"ERROR: {i}th Pokemon tried to target a Pokemon that doesn't exist")
                     return False
 

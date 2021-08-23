@@ -96,7 +96,7 @@ def active_pokemon_to_showdown_target(i, opp=False):
     else: return {0: -1, 1: -2}[i]
 
 # This is how we translate showdown targets pokemon to active pokemon returned from the Battle object
-def showdown_target_to_mon(battle, i) -> Optional[Pokemon]:
+def showdown_target_to_mon(battle, i):
     """
     :return: Given a showdown target, returns the mon in the battle
     :rtype: int
