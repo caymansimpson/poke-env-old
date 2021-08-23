@@ -41,6 +41,7 @@ class DoubleBattle(AbstractBattle):
 
         # Other
         self._move_to_pokemon_id: Dict[Move, str] = {}
+        self._sent_team: Set[Pokemon] = set() # To account who we sent, useful for VGC
 
     def _clear_all_boosts(self):
         for active_pokemon_group in (self.active_pokemon, self.opponent_active_pokemon):
@@ -162,6 +163,9 @@ class DoubleBattle(AbstractBattle):
                         pokemon = self._team[pokemon["ident"]]
                         if not pokemon.active and not pokemon.fainted:
                             self._available_switches[pokemon_index].append(pokemon)
+
+        # To account for who we sent (useful for VGC)
+        self._sent_team = set(map(lambda x: self._team[x['ident']], side['pokemon']))
 
     def _switch(self, pokemon, details, hp_status):
         pokemon_identifier = pokemon.split(":")[0][:3]
@@ -330,7 +334,7 @@ class DoubleBattle(AbstractBattle):
     @property
     def can_dynamax(self) -> List[bool]:
         """
-        :return: Wheter of not the current active pokemon can dynamax
+        :return: Wheter or not the current active pokemon can dynamax
         :rtype: List[bool]
         """
         return self._can_dynamax
@@ -398,6 +402,30 @@ class DoubleBattle(AbstractBattle):
         else:
             self._opponent_can_dynamax = value
 
+    @property
+    def sent_team(self) -> Dict[str, Pokemon]:
+        """
+        A dict of mons that we sent out for the battle (different from self.team) in
+        the case of VGC, where we only send out a portion of our team.
+
+        :return: The full team we sent. Keys are identifiers, values are pokemon objects.
+            This includes all mons that are possible
+        :rtype: Dict[str, Pokemon]
+        """
+        return {mon.species: mon for mon in self._sent_team}
+
+     @property
+    def teampreview_opponent_team(self) -> Dict[str, Pokemon]:
+        """
+        During teampreview, keys are not definitive: please rely on values; self.team
+        only stores what we currently know of an opponent's team, which is little in
+        some cases in VGC; this property returns everything we see in team preview.
+
+        :return: The opponent's full team. Keys are identifiers, values are pokemon objects.
+            This includes all mons that are possible
+        :rtype: Dict[str, Pokemon]
+        """
+        return {mon.species: mon for mon in self._teampreview_opponent_team}
     @property
     def trapped(self) -> List[bool]:
         """
