@@ -1,3 +1,6 @@
+# NOTE: this is a forked and archived version of Poke-env
+The original intent of this was to work with [ReuniclusVGC](https://github.com/caymansimpson/reuniclusVGC), which created a baseline DQN bot. I am now archiving tihs repository to build into poke-env, integrating VGC support directly. Thus, much of the unique code here will be centralized for future VGC use.
+
 # The pokemon showdown Python environment
 
 [![PyPI version fury.io](https://badge.fury.io/py/poke-env.svg)](https://pypi.python.org/pypi/poke-env/)
